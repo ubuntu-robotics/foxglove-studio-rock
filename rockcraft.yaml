@@ -21,6 +21,7 @@ services:
     on-check-failure:
       health: restart
 
+  # Incompatible with run-user: _daemon_
   # studio:
   #     override: replace
   #     startup: enabled
