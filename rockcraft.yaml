@@ -106,12 +106,3 @@ parts:
       chmod +x ${CRAFT_PART_INSTALL}/bin/caddy
 
       # setcap cap_net_bind_service=+ep ${CRAFT_PART_INSTALL}/bin/caddy
-
-# rockcraft pack
-# sudo /snap/rockcraft/current/bin/skopeo --insecure-policy copy oci-archive:foxglove-studio_1.0_amd64.rock docker-daemon:foxglove-studio:rock
-# docker image list
-# docker run --rm --name studio -p 127.0.0.1:8080:8080 foxglove-studio:rock
-
-# @todo
-
-# http://localhost:8080/?ds=remote-file&ds.url=
