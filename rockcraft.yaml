@@ -10,24 +10,15 @@ platforms:
   amd64:
   # arm64:
 
-run-user: _daemon_
+run-user: _daemon_ # 584792
 
 services:
   studio:
-    override: replace
-    startup: enabled
-    working-dir: foxglove
-    command: "caddy file-server --listen :8080"
-    on-check-failure:
-      health: restart
-
-  # Incompatible with run-user: _daemon_
-  # studio:
-  #     override: replace
-  #     startup: enabled
-  #     command: "entrypoint"
-  #     on-check-failure:
-  #       health: restart
+      override: replace
+      startup: enabled
+      command: "entrypoint"
+      on-check-failure:
+        health: restart
 
 checks:
   health:
@@ -37,7 +28,6 @@ checks:
     level: alive
 
 parts:
-
   foxglove-studio:
     plugin: nil
     source: https://github.com/foxglove/studio.git
