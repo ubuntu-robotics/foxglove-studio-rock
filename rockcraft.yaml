@@ -49,50 +49,46 @@ parts:
       yarn install --immutable
       yarn run webpack --mode production --config web/webpack.config.ts --output-path ${CRAFT_PART_INSTALL}/foxglove
 
+      # Add an empty html page for a cheap health GET
       printf '<HTML>\n</HTML>' > ${CRAFT_PART_INSTALL}/foxglove/health.html
 
-  # entrypoint:
-  #   plugin: nil
-  #   stage-packages: [bash_bins, coreutils_bins]
-  #   override-build: |
-  #     mkdir -p ${CRAFT_PART_INSTALL}/bin
+      # Set ownership to the _daemon_ user
+      chown -R 584792:0 ${CRAFT_PART_INSTALL}/foxglove
 
-  #     cat > ${CRAFT_PART_INSTALL}/bin/entrypoint <<EOF
-  #     #!/bin/bash
-
-  #     mkdir -p /foxglove
-  #     touch /foxglove/default-layout.json
-  #     index_html=\$(cat /foxglove/index.html)
-  #     replace_pattern='/*FOXGLOVE_STUDIO_DEFAULT_LAYOUT_PLACEHOLDER*/'
-  #     replace_value=\$(cat /foxglove/default-layout.json)
-  #     echo "\${index_html/"\$replace_pattern"/\$replace_value}" > /foxglove/index.html
-
-  #     caddy file-server --listen :8080 --root /foxglove
-  #     # Continue executing the CMD
-  #     # exec "\$@"
-  #     EOF
-
-  #     chmod +x ${CRAFT_PART_INSTALL}/bin/entrypoint
-
-  caddy:
+  entrypoint:
     plugin: nil
-    build-packages: [curl, tar] #wget
+    stage-packages: [bash_bins, coreutils_bins]
     override-build: |
       mkdir -p ${CRAFT_PART_INSTALL}/bin
 
-      # Get the latest caddy release
-      if [ ! -f ${CRAFT_PART_INSTALL}/bin/caddy ]; then
-        curl -s https://api.github.com/repos/caddyserver/caddy/releases/latest | awk -F': ' '/browser_download_url/ && /caddy_.*_linux_${CRAFT_ARCH_BUILD_FOR}.tar.gz/ && ! /.sig/ {gsub(/"/, "", $(NF)); system("curl -LO " $(NF))}'
-        tar x -z -f caddy_*_linux_${CRAFT_ARCH_BUILD_FOR}.tar.gz -C ${CRAFT_PART_INSTALL}/bin caddy
-      fi
+      cat > ${CRAFT_PART_INSTALL}/bin/entrypoint <<EOF
+      #!/bin/bash
+
+      mkdir -p /foxglove
+      touch /foxglove/default-layout.json
+      index_html=\$(cat /foxglove/index.html)
+      replace_pattern='/*FOXGLOVE_STUDIO_DEFAULT_LAYOUT_PLACEHOLDER*/'
+      replace_value=\$(cat /foxglove/default-layout.json)
+      echo "\${index_html/"\$replace_pattern"/\$replace_value}" > /foxglove/index.html
+
+      caddy file-server --listen :8080 --root /foxglove
+      EOF
+
+      chmod +x ${CRAFT_PART_INSTALL}/bin/entrypoint
+
+  caddy:
+    plugin: nil
+    build-packages: [wget]
+    build-environment:
+      - CADDY_VERSION: 2.7.5
+    override-build: |
+      mkdir -p ${CRAFT_PART_INSTALL}/bin
 
       # Get caddy at a specific version
-      # export CADDY_VERSION=2.7.5
-      #
-      # if [ ! -f ${CRAFT_PART_INSTALL}/bin/caddy ];
-      #   then wget -O ${CRAFT_PART_BUILD}/caddy.tar.gz "https://github.com/caddyserver/caddy/releases/download/v${CADDY_VERSION}/caddy_${CADDY_VERSION}_linux_${CRAFT_ARCH_BUILD_FOR}.tar.gz"
-      #   tar x -z -f ${CRAFT_PART_BUILD}/caddy.tar.gz -C ${CRAFT_PART_INSTALL}/bin caddy
-      # fi
+      if [ ! -f ${CRAFT_PART_INSTALL}/bin/caddy ];
+        then wget -O ${CRAFT_PART_BUILD}/caddy.tar.gz "https://github.com/caddyserver/caddy/releases/download/v${CADDY_VERSION}/caddy_${CADDY_VERSION}_linux_${CRAFT_ARCH_BUILD_FOR}.tar.gz"
+        tar x -z -f ${CRAFT_PART_BUILD}/caddy.tar.gz -C ${CRAFT_PART_INSTALL}/bin caddy
+      fi
 
       chmod +x ${CRAFT_PART_INSTALL}/bin/caddy
 
