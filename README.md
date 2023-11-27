@@ -16,7 +16,7 @@ Automation takes care of:
 Install rockcraft,
 
 ```bash
-snap install rockcraft
+snap install rockcraft --classic
 ```
 
 Build the ROCK,
