@@ -8,6 +8,7 @@ on:
   pull_request:
     branches:
       - main
+      - feature/initial_upload
 
 jobs:
   pull-request:
