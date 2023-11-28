@@ -1,0 +1,15 @@
+name: Update ROCK
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: '0 */4 * * *'
+
+jobs:
+  build:
+    uses: canonical/observability/.github/workflows/rock-update.yaml@main
+    with:
+      rock-name: foxglove-studio
+      source-repo: foxglove/studio
+      # @todo caddy update
+      # update-script:
