@@ -33,12 +33,23 @@ parts:
     source: https://github.com/foxglove/studio.git
     source-tag: v1.79.0
     build-packages: [gcc, curl, git-lfs]
+    build-environment:
+      - NODE_VERSION: 16.14.2
     override-build: |
 
       craftctl default
 
+      # We can't use the node snap since it doesn't support corepack
+      # see https://github.com/nodejs/snap/issues/26
       if [ ! -f ${CRAFT_PART_BUILD}/bin ];
-        then curl -s "https://nodejs.org/dist/v16.14.2/node-v16.14.2-linux-x64.tar.gz" | tar xzf - -C "${CRAFT_PART_BUILD}/" --no-same-owner --strip-components=1;
+
+        case ${CRAFT_ARCH_BUILD_FOR} in
+          amd64) export NODEJS_ARCH=x64 ;;
+          arm64) export NODEJS_ARCH=amd64 ;;
+          *) echo Unsupported value for 'CRAFT_ARCH_BUILD_FOR=${CRAFT_ARCH_BUILD_FOR}' ;;
+        esac
+
+        then curl -s "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-${NODEJS_ARCH}.tar.gz" | tar xzf - -C "${CRAFT_PART_BUILD}/" --no-same-owner --strip-components=1
       fi
 
       export PATH=${CRAFT_PART_BUILD}/bin:${PATH}
