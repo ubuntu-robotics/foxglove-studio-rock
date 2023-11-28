@@ -1,7 +1,7 @@
 name: foxglove-studio
 summary: Robotics visualization and debugging
 description: Foxglove is an integrated visualization and diagnosis tool for robotics.
-version: "1.0"
+version: "1.79.0"
 license: MPL-2.0
 
 base: bare
@@ -31,6 +31,7 @@ parts:
   foxglove-studio:
     plugin: nil
     source: https://github.com/foxglove/studio.git
+    source-tag: v1.79.0
     build-packages: [gcc, curl, git-lfs]
     override-build: |
 
