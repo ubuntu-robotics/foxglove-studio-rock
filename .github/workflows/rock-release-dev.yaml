@@ -47,24 +47,36 @@ jobs:
         rockcraft_dir=$(dirname ${latest_rockcraft_file#\./})
         echo "latest-dir=$rockcraft_dir" >> $GITHUB_OUTPUT
 
-    - name: Setup LXD
-      uses: canonical/setup-lxd@v0.1.1
-      with:
-        channel: latest/stable
+    # - name: Setup LXD
+    #   uses: canonical/setup-lxd@v0.1.1
+    #   with:
+    #     channel: latest/stable
 
     - name: Install dependencies
       run: |
         sudo snap install yq
-        sudo snap install --classic rockcraft
+        # sudo snap install --classic rockcraft
+
+    # - name: Build ROCK
+    #   run: |
+    #     rockcraft_dir="${{ steps.find-latest.outputs.latest-dir }}"
+    #     current_wd=$(pwd) && cd $rockcraft_dir
+    #     rockcraft pack --verbose
+    #     cd $current_wd
+    #     cp $rockcraft_dir/foxglove-studio_*.rock $current_wd
+    #     digest=$(skopeo inspect oci-archive:$(realpath ./foxglove-studio_*.rock) --format '{{.Digest}}')
+    #     echo "digest=${digest#*:}" >> "$GITHUB_OUTPUT"
 
     - name: Build ROCK
+      uses: canonical/craft-actions/rockcraft-pack@main
+      with:
+        path: "${{ steps.find-latest.outputs.latest-dir }}"
+        verbosity: verbose
+      id: rockcraft
+
+    - name: Generate digest
       run: |
-        rockcraft_dir="${{ steps.find-latest.outputs.latest-dir }}"
-        current_wd=$(pwd) && cd $rockcraft_dir
-        rockcraft pack --verbose
-        cd $current_wd
-        cp $rockcraft_dir/foxglove-studio_*.rock $current_wd
-        digest=$(skopeo inspect oci-archive:$(realpath ./foxglove-studio_*.rock) --format '{{.Digest}}')
+        digest=$(skopeo inspect oci-archive:$(realpath ${{ steps.rockcraft.outputs.rock }}) --format '{{.Digest}}')
         echo "digest=${digest#*:}" >> "$GITHUB_OUTPUT"
 
     - name: Upload ROCK to ghcr.io
