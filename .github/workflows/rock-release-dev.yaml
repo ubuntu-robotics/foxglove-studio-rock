@@ -27,15 +27,11 @@
 name: Build ROCK and release dev tag to GHCR
 
 on:
-  workflow_call:
-    # inputs:
-      # rock-name:
-        # description: "Name of the application for which to build the ROCK"
-        # required: true
-        # type: string
-    secrets:
-      OBSERVABILITY_NOCTUA_TOKEN:
-        required: true
+  workflow_dispatch: {}
+  push:
+    branches:
+      - main
+      - feature/initial_upload
 
 jobs:
   main:
