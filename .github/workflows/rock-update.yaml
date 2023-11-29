@@ -11,5 +11,25 @@ jobs:
     with:
       rock-name: foxglove-studio
       source-repo: foxglove/studio
-      # @todo caddy update
-      # update-script:
+      update-script: |
+        # The caller must provide \$application_src and \$rockcraft_yaml
+        #   \$application_src: The root folder of the cloned upstream project
+        #   \$rockcraft_yaml: Path of the rockcraft.yaml to update
+        #
+        ## caddy dependency
+        CADDY_LATEST_RELEASE=$(curl -L \
+          -H "Accept: application/vnd.github+json" \
+          -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}"\
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          https://api.github.com/repos/caddyserver/caddy/releases/latest \
+          | jq -r 'select(.prerelease == false) | .tag_name')
+
+        CADDY_LATEST_VERSION=${CADDY_LATEST_RELEASE#"v"}
+
+        echo "Caddy current version is ${version}."
+        echo "Caddy latest release is ${CADDY_LATEST_VERSION}."
+
+        if [ "${CADDY_LATEST_VERSION}" != "${version}" ] && [ "$(printf '%s\n' "${CADDY_LATEST_VERSION}" "${version}" | sort -V | head -n1)" = "$version" ]; then
+          echo "Updating Caddy in rockcraft.yaml"
+          yq -i '(.parts.caddy["build-environment"].[] | select(.CADDY_VERSION)).CADDY_VERSION = "${CADDY_LATEST_VERSION}"' $rockcraft_yaml
+        fi
