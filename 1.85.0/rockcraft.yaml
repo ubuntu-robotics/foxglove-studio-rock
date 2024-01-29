@@ -1,0 +1,99 @@
+name: foxglove-studio
+summary: Robotics visualization and debugging
+description: Foxglove is an integrated visualization and diagnosis tool for robotics.
+version: "1.85.0"
+license: MPL-2.0
+base: bare
+build-base: ubuntu@22.04
+platforms:
+  amd64:
+  arm64:
+run-user: _daemon_ # 584792
+services:
+  studio:
+    override: replace
+    startup: enabled
+    command: "entrypoint"
+    on-check-failure:
+      health: restart
+checks:
+  health:
+    override: replace
+    http:
+      url: http://localhost:8080/health.html
+    level: alive
+parts:
+  foxglove-studio:
+    plugin: nil
+    source: https://github.com/foxglove/studio.git
+    source-tag: v1.85.0
+    build-packages: [gcc, curl, git-lfs]
+    build-environment:
+      - NODE_VERSION: 16.14.2
+    override-build: |2
+      craftctl default
+
+      # We can't use the node snap since it doesn't support corepack
+      # see https://github.com/nodejs/snap/issues/26
+      if [ ! -f ${CRAFT_PART_BUILD}/bin ];
+
+        case ${CRAFT_ARCH_BUILD_FOR} in
+          amd64) export NODEJS_ARCH=x64 ;;
+          arm64) export NODEJS_ARCH=amd64 ;;
+          *) echo Unsupported value for 'CRAFT_ARCH_BUILD_FOR=${CRAFT_ARCH_BUILD_FOR}' ;;
+        esac
+
+        then curl -s "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-${NODEJS_ARCH}.tar.gz" | tar xzf - -C "${CRAFT_PART_BUILD}/" --no-same-owner --strip-components=1
+      fi
+
+      export PATH=${CRAFT_PART_BUILD}/bin:${PATH}
+
+      git lfs install
+      git lfs pull
+
+      corepack enable
+      yarn install --immutable
+      yarn run webpack --mode production --config web/webpack.config.ts --output-path ${CRAFT_PART_INSTALL}/foxglove
+
+      # Add an empty html page for a cheap health GET
+      printf '<HTML>\n</HTML>' > ${CRAFT_PART_INSTALL}/foxglove/health.html
+
+      # Set ownership to the _daemon_ user
+      chown -R 584792:0 ${CRAFT_PART_INSTALL}/foxglove
+  entrypoint:
+    plugin: nil
+    stage-packages: [bash_bins, coreutils_bins]
+    override-build: |
+      mkdir -p ${CRAFT_PART_INSTALL}/bin
+
+      cat > ${CRAFT_PART_INSTALL}/bin/entrypoint <<EOF
+      #!/bin/bash
+
+      mkdir -p /foxglove
+      touch /foxglove/default-layout.json
+      index_html=\$(cat /foxglove/index.html)
+      replace_pattern='/*FOXGLOVE_STUDIO_DEFAULT_LAYOUT_PLACEHOLDER*/'
+      replace_value=\$(cat /foxglove/default-layout.json)
+      echo "\${index_html/"\$replace_pattern"/\$replace_value}" > /foxglove/index.html
+
+      caddy file-server --listen :8080 --root /foxglove
+      EOF
+
+      chmod +x ${CRAFT_PART_INSTALL}/bin/entrypoint
+  caddy:
+    plugin: nil
+    build-packages: [wget]
+    build-environment:
+      - CADDY_VERSION: 2.7.5
+    override-build: |
+      mkdir -p ${CRAFT_PART_INSTALL}/bin
+
+      # Get caddy at a specific version
+      if [ ! -f ${CRAFT_PART_INSTALL}/bin/caddy ];
+        then wget -O ${CRAFT_PART_BUILD}/caddy.tar.gz "https://github.com/caddyserver/caddy/releases/download/v${CADDY_VERSION}/caddy_${CADDY_VERSION}_linux_${CRAFT_ARCH_BUILD_FOR}.tar.gz"
+        tar x -z -f ${CRAFT_PART_BUILD}/caddy.tar.gz -C ${CRAFT_PART_INSTALL}/bin caddy
+      fi
+
+      chmod +x ${CRAFT_PART_INSTALL}/bin/caddy
+
+      # setcap cap_net_bind_service=+ep ${CRAFT_PART_INSTALL}/bin/caddy
