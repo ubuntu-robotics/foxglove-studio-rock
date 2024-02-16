@@ -3,15 +3,12 @@ summary: Robotics visualization and debugging
 description: Foxglove is an integrated visualization and diagnosis tool for robotics.
 version: "1.87.0"
 license: MPL-2.0
-
 base: bare
 build-base: ubuntu@22.04
 platforms:
   amd64:
   arm64:
-
 run-user: _daemon_ # 584792
-
 services:
   studio:
     override: replace
@@ -19,14 +16,12 @@ services:
     command: "entrypoint"
     on-check-failure:
       health: restart
-
 checks:
   health:
     override: replace
     http:
       url: http://localhost:8080/health.html
     level: alive
-
 parts:
   foxglove-studio:
     plugin: nil
@@ -68,7 +63,6 @@ parts:
 
       # Set ownership to the _daemon_ user
       chown -R 584792:0 ${CRAFT_PART_INSTALL}/foxglove
-
   entrypoint:
     plugin: nil
     stage-packages: [bash_bins, coreutils_bins]
@@ -89,7 +83,6 @@ parts:
       EOF
 
       chmod +x ${CRAFT_PART_INSTALL}/bin/entrypoint
-
   caddy:
     plugin: nil
     build-packages: [wget]
