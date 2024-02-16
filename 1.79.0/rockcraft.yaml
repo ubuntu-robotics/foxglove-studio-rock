@@ -36,7 +36,6 @@ parts:
     build-environment:
       - NODE_VERSION: 16.14.2
     override-build: |
-
       craftctl default
 
       # We can't use the node snap since it doesn't support corepack
