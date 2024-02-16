@@ -35,6 +35,9 @@ parts:
     build-packages: [gcc, curl, git-lfs]
     build-environment:
       - NODE_VERSION: 16.14.2
+    override-pull: |
+      craftctl default
+      git apply ${CRAFT_PROJECT_DIR}/local/*.patch
     override-build: |
       craftctl default
 

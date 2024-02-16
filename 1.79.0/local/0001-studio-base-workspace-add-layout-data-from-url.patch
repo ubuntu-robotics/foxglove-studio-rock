@@ -1,0 +1,140 @@
+From 60a2716bd9ccb0acb19335e31dc65159d534242c Mon Sep 17 00:00:00 2001
+From: Brian Westphal <brian.westphal@samsara.com>
+Date: Thu, 16 Nov 2023 18:07:39 -0800
+Subject: [PATCH] studio-base workspace: add layout data from url
+
+Given a url parameter for "layoutUrl" pointing to a json file with
+layout data, updates the current page's layout.
+---
+ packages/studio-base/src/Workspace.tsx       | 41 +++++++++++++++++++-
+ packages/studio-base/src/util/appURLState.ts | 11 ++++++
+ 2 files changed, 50 insertions(+), 2 deletions(-)
+
+diff --git a/packages/studio-base/src/Workspace.tsx b/packages/studio-base/src/Workspace.tsx
+index 7f6713638..44bd5526d 100644
+--- a/packages/studio-base/src/Workspace.tsx
++++ b/packages/studio-base/src/Workspace.tsx
+@@ -65,6 +65,7 @@ import WorkspaceContextProvider from "@foxglove/studio-base/providers/WorkspaceC
+ import { parseAppURLState } from "@foxglove/studio-base/util/appURLState";
+ 
+ import { useWorkspaceActions } from "./context/Workspace/useWorkspaceActions";
++import {LayoutData, useCurrentLayoutActions} from "@foxglove/studio-base/context/CurrentLayoutContext";
+ 
+ const log = Logger.getLogger(__filename);
+ 
+@@ -405,6 +406,7 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
+     () => getMessagePipeline().playerState.activeData ?? {},
+     [getMessagePipeline],
+   );
++  const { setCurrentLayout } = useCurrentLayoutActions();
+ 
+   const targetUrlState = useMemo(() => {
+     const deepLinks = props.deepLinks ?? [];
+@@ -412,16 +414,43 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
+   }, [props.deepLinks]);
+ 
+   const [unappliedSourceArgs, setUnappliedSourceArgs] = useState(
+-    targetUrlState ? { ds: targetUrlState.ds, dsParams: targetUrlState.dsParams } : undefined,
++    targetUrlState ? { ds: targetUrlState.ds, dsParams: targetUrlState.dsParams, layoutUrl: targetUrlState.layoutUrl } : undefined,
+   );
+ 
+   const selectEvent = useEvents(selectSelectEvent);
++
++  const fetchLayoutFromUrl = async (layoutUrl: string) => {
++    if (!layoutUrl) {
++      return;
++    }
++    let res;
++    try {
++      res = await fetch(layoutUrl);
++    } catch {
++      log.debug(`Could not load the layout from ${layoutUrl}`);
++      return;
++    }
++    const parsedState: unknown = JSON.parse(await res.text());
++
++    if (typeof parsedState !== "object" || !parsedState) {
++      log.debug(`${layoutUrl} does not contain valid layout JSON`);
++      return;
++    }
++
++    const layoutData = parsedState as LayoutData
++    setCurrentLayout({
++      name: "test-layout",
++      data: layoutData,
++    });
++  }
++
+   // Load data source from URL.
+   useEffect(() => {
+     if (!unappliedSourceArgs) {
+       return;
+     }
+ 
++    let shouldUpdate
+     // Apply any available datasource args
+     if (unappliedSourceArgs.ds) {
+       log.debug("Initialising source from url", unappliedSourceArgs);
+@@ -430,7 +459,15 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
+         params: unappliedSourceArgs.dsParams,
+       });
+       selectEvent(unappliedSourceArgs.dsParams?.eventId);
+-      setUnappliedSourceArgs({ ds: undefined, dsParams: undefined });
++      shouldUpdate = true
++    }
++    // Apply any available datasource args
++    if (unappliedSourceArgs.layoutUrl) {
++      fetchLayoutFromUrl(unappliedSourceArgs.layoutUrl);
++      shouldUpdate = true
++    }
++    if (shouldUpdate) {
++      setUnappliedSourceArgs({ds: undefined, dsParams: undefined, layoutUrl: undefined});
+     }
+   }, [selectEvent, selectSource, unappliedSourceArgs, setUnappliedSourceArgs]);
+ 
+diff --git a/packages/studio-base/src/util/appURLState.ts b/packages/studio-base/src/util/appURLState.ts
+index a7dd2384e..9532a0c9d 100644
+--- a/packages/studio-base/src/util/appURLState.ts
++++ b/packages/studio-base/src/util/appURLState.ts
+@@ -8,6 +8,7 @@ import { fromRFC3339String, toRFC3339String, Time } from "@foxglove/rostime";
+ 
+ export type AppURLState = {
+   ds?: string;
++  layoutUrl?: string;
+   dsParams?: Record<string, string>;
+   time?: Time;
+ };
+@@ -38,6 +39,14 @@ export function updateAppURLState(url: URL, urlState: AppURLState): URL {
+     }
+   }
+ 
++  if ("layoutUrl" in urlState) {
++    if (urlState.layoutUrl) {
++      newURL.searchParams.set("layoutUrl", urlState.layoutUrl);
++    } else {
++      newURL.searchParams.delete("layoutUrl");
++    }
++  }
++
+   if ("dsParams" in urlState) {
+     [...newURL.searchParams].forEach(([k]) => {
+       if (k.startsWith("ds.")) {
+@@ -64,6 +73,7 @@ export function updateAppURLState(url: URL, urlState: AppURLState): URL {
+  */
+ export function parseAppURLState(url: URL): AppURLState | undefined {
+   const ds = url.searchParams.get("ds") ?? undefined;
++  const layoutUrl = url.searchParams.get("layoutUrl");
+   const timeString = url.searchParams.get("time");
+   const time = timeString == undefined ? undefined : fromRFC3339String(timeString);
+   const dsParams: Record<string, string> = {};
+@@ -78,6 +88,7 @@ export function parseAppURLState(url: URL): AppURLState | undefined {
+     {
+       time,
+       ds,
++      layoutUrl,
+       dsParams: _.isEmpty(dsParams) ? undefined : dsParams,
+     },
+     _.isEmpty,
+-- 
+2.25.1
+
