@@ -29,7 +29,10 @@ parts:
     source-tag: v1.87.0
     build-packages: [gcc, curl, git-lfs]
     build-environment:
-      - NODE_VERSION: 16.14.2
+      - NODE_VERSION: 19.9.0
+    override-pull: |
+      craftctl default
+      git apply ${CRAFT_PROJECT_DIR}/local/*.patch
     override-build: |
       craftctl default
 
