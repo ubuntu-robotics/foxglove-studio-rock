@@ -28,8 +28,8 @@ rockcraft pack
 Convert it to a Docker image,
 
 ```bash
-sudo /snap/rockcraft/current/bin/skopeo --insecure-policy copy
-oci-archive:foxglove-studio_1.0_amd64.rock docker-daemon:foxglove-studio:rock
+sudo /snap/rockcraft/current/bin/skopeo --insecure-policy copy \
+oci-archive:foxglove-studio_*_amd64.rock docker-daemon:foxglove-studio:rock
 ```
 
 Verify that the image is now available,
@@ -46,5 +46,23 @@ docker run --rm --name studio -p 127.0.0.1:8080:8080 foxglove-studio:rock
 
 And open your web browser at `http://localhost:8080`.
 
-<!-- @todo -->
-<!-- http://localhost:8080/?ds=remote-file&ds.url= -->
+## Shareable links
+
+Build and share deep links with your teammates to open Foxglove
+with specific layouts and data sources.
+
+To open Foxglove using a specific layout or data source,
+construct a "deep link" URL using the format:
+
+```
+https://127.0.0.1:8080/?param1=value2&param2=value2
+```
+
+The complete documentation can be found on
+[Foxglove shareable links doc](https://docs.foxglove.dev/docs/visualization/shareable-links)
+
+Starting at version 1.87.0, this rock includes [a patch](./1.87.0/local/0001-studio-base-workspace-add-layout-data-from-url.patch) allowing custom dynamic layout through the following parameter:
+
+| parameter | type | required | description |
+| ----------|------|----------|------------ |
+| layoutURL | string | ✓ | URL to layout json file |
