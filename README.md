@@ -53,13 +53,15 @@ with specific layouts and data sources.
 
 To open Foxglove using a specific layout or data source,
 construct a "deep link" URL using the format:
+
 ```
 https://127.0.0.1:8080/?param1=value2&param2=value2
 ```
+
 The complete documentation can be found on
 [Foxglove shareable links doc](https://docs.foxglove.dev/docs/visualization/shareable-links)
 
-Additionally, this rock is integrating a patch to add the following parameter:
+Starting at version 1.87.0, this rock includes [a patch](./1.87.0/local/0001-studio-base-workspace-add-layout-data-from-url.patch) allowing custom dynamic layout through the following parameter:
 
 | parameter | type | required | description |
 | ----------|------|----------|------------ |
