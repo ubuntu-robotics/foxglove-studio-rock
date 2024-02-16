@@ -1,4 +1,4 @@
-From 60a2716bd9ccb0acb19335e31dc65159d534242c Mon Sep 17 00:00:00 2001
+From 2283ebc97cf3fd89a758f41f82566204bd78972f Mon Sep 17 00:00:00 2001
 From: Brian Westphal <brian.westphal@samsara.com>
 Date: Thu, 16 Nov 2023 18:07:39 -0800
 Subject: [PATCH] studio-base workspace: add layout data from url
@@ -11,10 +11,10 @@ layout data, updates the current page's layout.
  2 files changed, 50 insertions(+), 2 deletions(-)
 
 diff --git a/packages/studio-base/src/Workspace.tsx b/packages/studio-base/src/Workspace.tsx
-index 7f6713638..44bd5526d 100644
+index 986f137f9..6a8181f39 100644
 --- a/packages/studio-base/src/Workspace.tsx
 +++ b/packages/studio-base/src/Workspace.tsx
-@@ -65,6 +65,7 @@ import WorkspaceContextProvider from "@foxglove/studio-base/providers/WorkspaceC
+@@ -64,6 +64,7 @@ import WorkspaceContextProvider from "@foxglove/studio-base/providers/WorkspaceC
  import { parseAppURLState } from "@foxglove/studio-base/util/appURLState";
  
  import { useWorkspaceActions } from "./context/Workspace/useWorkspaceActions";
@@ -22,7 +22,7 @@ index 7f6713638..44bd5526d 100644
  
  const log = Logger.getLogger(__filename);
  
-@@ -405,6 +406,7 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
+@@ -354,6 +355,7 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
      () => getMessagePipeline().playerState.activeData ?? {},
      [getMessagePipeline],
    );
@@ -30,7 +30,7 @@ index 7f6713638..44bd5526d 100644
  
    const targetUrlState = useMemo(() => {
      const deepLinks = props.deepLinks ?? [];
-@@ -412,16 +414,43 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
+@@ -361,16 +363,43 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
    }, [props.deepLinks]);
  
    const [unappliedSourceArgs, setUnappliedSourceArgs] = useState(
@@ -72,10 +72,10 @@ index 7f6713638..44bd5526d 100644
      }
  
 +    let shouldUpdate
-     // Apply any available datasource args
+     // Apply any available data source args
      if (unappliedSourceArgs.ds) {
        log.debug("Initialising source from url", unappliedSourceArgs);
-@@ -430,7 +459,15 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
+@@ -379,7 +408,15 @@ function WorkspaceContent(props: WorkspaceProps): JSX.Element {
          params: unappliedSourceArgs.dsParams,
        });
        selectEvent(unappliedSourceArgs.dsParams?.eventId);
