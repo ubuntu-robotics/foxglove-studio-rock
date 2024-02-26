@@ -3,7 +3,7 @@
 # does not allow setting a GHCR repo where to publish at the moment.
 # We thus copy it below and adapt it.
 
-name: Build ROCK and release dev tag to GHCR
+name: Build ROCK and release dev or branch tag to GHCR
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -45,7 +45,14 @@ jobs:
 
     - name: Upload ROCK to ghcr.io
       run: |
-        sudo skopeo --insecure-policy copy oci-archive:$(realpath ${{ steps.rockcraft.outputs.rock }}) docker://ghcr.io/ubuntu-robotics/foxglove-studio:dev --dest-creds "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}"
+        if [[ ${{ github.ref }} == 'refs/heads/main' ]]
+        then
+          TAG=dev
+        else
+          TAG=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}
+          TAG=$(echo $TAG | sed "s|\/|\_|")
+        fi
+        sudo skopeo --insecure-policy copy oci-archive:$(realpath ${{ steps.rockcraft.outputs.rock }}) docker://ghcr.io/ubuntu-robotics/foxglove-studio:$TAG --dest-creds "${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}"
 
     - name: Generate digest
       run: |
