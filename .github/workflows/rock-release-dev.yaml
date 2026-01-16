@@ -21,7 +21,7 @@ jobs:
     steps:
 
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v6
 
     - name: Find the *latest* rockcraft.yaml
       id: find-latest
@@ -38,7 +38,7 @@ jobs:
       id: rockcraft
 
     - name: Upload locally built ROCK artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v6
       with:
         name: foxglove-studio-rock
         path: ${{ steps.rockcraft.outputs.rock }}
@@ -67,7 +67,7 @@ jobs:
       run: syft $(realpath ${{ steps.rockcraft.outputs.rock }}) -o spdx-json=foxglove-studio.sbom.json
 
     - name: Upload SBOM
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v6
       with:
         name: foxglove-studio-sbom
         path: "foxglove-studio.sbom.json"
