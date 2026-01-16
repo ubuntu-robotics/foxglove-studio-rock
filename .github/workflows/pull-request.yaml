@@ -9,23 +9,24 @@ on:
   pull_request:
     branches:
       - main
+      - track/*
 
 jobs:
   main:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v6
 
     - name: Determine any rockcraft.yaml changed in the PR
       id: changed-files
-      uses: tj-actions/changed-files@v46
+      uses: tj-actions/changed-files@v47
       with:
         files: "**/rockcraft.yaml"
 
     - name: Setup LXD
       if: steps.changed-files.outputs.any_changed
-      uses: canonical/setup-lxd@v0.1.0
+      uses: canonical/setup-lxd@v1
       with:
         channel: latest/stable
 
