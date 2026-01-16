@@ -25,8 +25,8 @@ checks:
 parts:
   foxglove-studio:
     plugin: nil
-    source: https://github.com/foxglove/studio.git
-    source-tag: v1.87.0
+    source: https://github.com/husarion/foxglove-studio.git
+    source-commit: aeae9afbc04a15cc6a854d4ea1e138f00296e835
     build-packages: [gcc, curl, git-lfs]
     build-environment:
       - NODE_VERSION: 19.9.0
