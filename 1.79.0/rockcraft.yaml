@@ -30,11 +30,11 @@ checks:
 parts:
   foxglove-studio:
     plugin: nil
-    source: https://github.com/foxglove/studio.git
-    source-tag: v1.79.0
+    source: https://github.com/husarion/foxglove-studio.git
+    source-commit: f3d5687a604e6da0ea65bef86d39fda60aa7006e
     build-packages: [gcc, curl, git-lfs]
     build-environment:
-      - NODE_VERSION: 16.14.2
+      - NODE_VERSION: 20.9.0
     override-build: |
       craftctl default
 
@@ -57,7 +57,7 @@ parts:
       git lfs pull
 
       corepack enable
-      yarn install --immutable
+      YARN_CHECKSUM_BEHAVIOR=update COREPACK_ENABLE_DOWNLOAD_PROMPT=0 yarn install --immutable
       yarn run webpack --mode production --config web/webpack.config.ts --output-path ${CRAFT_PART_INSTALL}/foxglove
 
       # Add an empty html page for a cheap health GET
